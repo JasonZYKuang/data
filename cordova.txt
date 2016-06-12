@@ -1,0 +1,165 @@
+npm install -g cordova
+npm install -g bower 安装bower
+耐心等候直至安装完成。
+
+创建应用程序
+命令行，切换到你的项目工作目录，执行以下语句创建HelloWord应用：
+
+cordova create hello com.example.hello HelloWorld –d
+
+耐心等待直至命令完成。
+
+第一个参数hello，指定目录名称。
+
+第二个参数com.example.hello类似C#的命名空间，或Java的包名。（不太确定，读者自行鉴别，原文写的是a reversedomain-style identifier）
+
+第三个参数指定了应用程序的显示标题。
+
+完成后可以查看Hello目录及其子目录结构。
+
+添加特定平台支持
+注意，以下所有命令都要在项目根目录下运行（用cd命令进入）。
+
+首先，你需要添加你所需要支持的平台，比如：
+
+cordova platform add android
+
+cordova platform add iOS
+
+注：貌似ios开发只能在Mac机器上进行，所以上面的add ios不会出现在Windows机器上。
+
+完成后运行以下命令查看：
+
+cordova platfrom list
+
+如果以后需要移除Android平台支持，可以运行：
+
+cordova platform rm android
+
+运行platform add或platform rm命令会影响项目目录下的内容。每一个被添加的平台会在项目根目录下的platform下产生一个对应平台的子目录。你可以看到各个平台下也存在www目录，比如platforms\android\assets\www。因为CLI会不断的复制项目根目录下的www中的内容，所以你应确保不要对平台下的www目录中的内容进行修改。如果你实在有这个需求，请参照本章末尾的“Merges目录”。
+
+警告：
+
+如果你使用CLI管理你的项目，请尽量不要更改platforms目录下的任何内容，除非你有明确的把握知道你在做什么。这是因为该目录下的内容会在一些条件下被覆盖。
+
+如果你希望此时能通过针对特定平台的SDK（比如Eclipse）来进行开发，你应该打开那些位于platforms子目录下的内容。这是因为平台相关的一些配置信息是存储在platforms特定子目录下的。
+
+编译应用程序
+默认情况下，cordova create脚本将创建一个非常简单的基于Web的应用程序。
+
+运行以下命令编译应用程序：
+
+cordova build
+
+或
+
+cordova build android  //只针对Andorid平台编译
+
+如果最终提示：BUILD SUCCESSFUL，则编译成功。
+
+实际上build命令对应于以下两个命令：
+
+cordova prepare android
+
+cordova compile android
+
+这意味着你可以仅执行prepare命令，然后用SDK开发环境去另外编译。
+你可以通过以下命令安装插件，比如:
+
+cordova plugin add org.apache.cordova.device                   //设备API
+
+cordova plugin add org.apache.cordova.network-information  //网络（事件）
+
+cordova plugin add org.apache.cordova.battery-status      //电池（事件）
+
+cordova plugin add org.apache.cordova.device-motion     //加速器
+
+cordova plugin add org.apache.cordova.device-orientation     //罗盘
+
+cordova plugin add org.apache.cordova.geolocation         //定位
+
+cordova plugin add org.apache.cordova.camera                 //摄像头 cordova plugin add cordova-plugin-camera
+
+cordova plugin add org.apache.cordova.media-capture     //媒体文件处理
+
+cordova plugin add org.apache.cordova.media                   //媒体文件处理  cordova plugin add cordova-plugin-media
+
+cordova plugin add org.apache.cordova.file                        //文件访问
+
+cordova plugin add org.apache.cordova.file-transfer          //文件传输
+
+cordova plugin add org.apache.cordova.dialogs                 //对话框
+
+cordova plugin add org.apache.cordova.vibration              //震动
+
+cordova plugin add org.apache.cordova.contacts               //联系人
+
+cordova plugin add org.apache.cordova.globalization       //全球化
+
+cordova plugin add org.apache.cordova.splashscreen       //闪屏
+
+cordova plugin add org.apache.cordova.inappbrowser             //打开新的浏览器窗口
+
+cordova plugin add org.apache.cordova.console                //调试控制台
+
+cordova plugin add cordova-plugin-crosswalk-webview
+
+你可以用以下命令查看所有已经安装的插件
+
+cordova plugin ls
+
+使用以下命令删除插件：
+
+cordova plugin rm org.apache.cordova.console    
+
+Plugin add高级选项
+
+上面的安装方式是从registry.cordova.io库中按照id获取插件，这是一个非常通用的做法。你可以在安装时指定版本，比如：
+
+cordovaplugin add org.apache.cordova.console@latest
+
+cordovaplugin add org.apache.cordova.console@0.2.1
+
+其中的latest表示获取最新版本。中间用@分隔。
+
+如果插件不是在默认库中，而是在其他地方，则你可以指定URL：
+
+cordova plugin add https://github.com/apache/cordova-plugin-console.git
+
+当然你需要先安装Git。
+Merge目录
+前面提到，一般情况下最好不要修改各自平台下的www目录下的文件。但是如果你确实需要为某个平台定制一些内容，又该怎么办呢？
+
+项目根目录下有一个merges目录。我们以一个实例来讲解：
+
+1） 修改www\css目录下的index.css文件，设置event.received的样式为红色：  background-color:#FF0000;
+
+2） 修改platforms\android\assets\www\css中的index.css文件，设置.event.received的样式为蓝色：background-color:#0000FF;
+
+3） 在merges\android目录下新建一个css目录。
+
+复制www\css中的index.css文件到该目录下。
+
+修改该目录下的index.css文件中的.event.received的样式为绿色：background-color:# 00FF00;
+
+仿真器中运行，你会发现最终呈现的结果为绿色。由此我们可知：
+
+1） Merges目录中没有对应文件时，platform下的文件会被跟目录（www）下的文件覆盖。（即：如果Merges目录中不存在index.css文件，最终颜色将为红色）
+
+2） Merges目录中存在对应文件时，platform下的文件会被merges下的文件覆盖。可见Merges目录主要用于为平台定制功能。
+
+帮助命令
+通过以下命令查看帮助信息:
+
+cordovahelp
+
+更新命令
+以下语句更新cordova：
+
+npm update -g cordova
+
+cordova更新完成后，你还需要更新项目：
+
+cordova platform update android
+
+注意：

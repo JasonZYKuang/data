@@ -1,0 +1,93 @@
+npm install -g ionic
+npm install -g cordova ionic
+npm install -g ionic@beta (安装v2版本)
+//安装ionic  或者命令
+
+ionic lib update
+//更新www/lib/ionic 目录的文件，如有项目中有bower，此命令会运行bower update ionic， 否则则会从CDN上下载文件并替换。
+
+ionic start your_app_name [template]
+$ ionic start your_app_name --v2
+//创建一个项目，其中template可以是内置的模板类型：blank/sidemenu/tabs（default）三种，也可以是github地址：https://github.com/driftyco/ionic-starter-tabs （这叫ionoic-starter），或者是Codepen starter地址：http://codepen.io/ionic/pen/odqCz
+
+//可选的参数： -a your_app_name -i com.yourcompany.youapp -w (不要用cordova)
+
+ionic serve [options]
+//启动一个本地的server，在浏览器中打开，并可监视文件变化，随时刷新浏览器。// 可以在主目录下的ionic.project文件的watchPatterns中配置要监视的文件夹。如：
+
+{
+  "name": "myApp",
+  "app_id": "",
+  "watchPatterns": [
+    "www/js/*",
+    "!www/css/**/*"
+  ]
+}
+ionic setup sass
+//增加一个watchPatterns到ionic.project中。
+
+ionic serve --lab
+//在浏览器中打开ios和andriod的显示界面
+
+ionic serv --address 68.52.96.10
+//指明一个外部的ip地址，可以让外部用户查看。
+
+ionic platform ios/android
+//添加目标平台
+ionic platform update ios/android
+//更新目标平台
+ionic platform rm ios/android
+cordova platform update android@4.4.1
+
+
+ionic build ios
+//构建ios平台
+ionic build android --xwalk64bit
+
+ionic emulate ios [options]
+//使用模拟器模拟ios
+
+//该命令等价于： ionic run ios --emulator
+
+ionic run ios [options]
+//使用设备运行应用，如果无设备可用将自动使用模拟器。
+
+//options的选项包括：
+
+-l livereload， 实时刷新变化。
+
+-c 打印app里的console
+
+-s 打印设备的console
+
+-p 指定设备的端口
+
+-i 指定livereload的重刷端口
+
+--debug|--release 命令： ionic build android --release
+
+//当处于livereload模式时，使用r重启客户端，使用 g your_url 跳转到指定url， 使用c启动或关闭console，使用s启动或关闭设备的console， 使用q退出。
+
+ionic resources [--splash] [--icon]
+//ionic会将本地的资源文件（支持png、psd和ai，尺寸越大越好）上传到它的服务器进行处理。本地资源文件放到resources目录下，如果是某个平台单独的资源，可以放到对应平台下，比如resources/android/icon.png，这样就会把处理好的资源自动放到该平台下，而不是所有平台都放。
+
+ionic upload
+//该命令上传自己的项目到ionic服务器，上传完成后会有一个项目编号。
+
+//安装Ionic View的app，使用ionic的账号登录进去，可以查看自己的项目。
+
+//也可以直接登录ionic的app网站，下载其他平台的app，比如安卓。
+
+ionic info
+//查看系统情况
+
+ionic browser add crosswalk
+//安卓自带浏览器性能不好，可以强行安装一个壳，这将安装一个Chromium内核。
+
+ionic browser list
+//查看可用的browser
+
+ionic browser revert android
+// 删除安装的browser
+
+ionic browser remove crosswalk  
