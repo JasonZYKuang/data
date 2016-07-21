@@ -1,0 +1,459 @@
+方言翻译官
+App技术开发说明书
+
+
+ 
+
+文档管理信息表
+主题	方言翻译官 － 技术开发说明书
+版本	1.0
+内容	方言翻译官 － 基于Hybrrd App（混合模式移动应用）开发的跨平台手机应用
+关键字	方言翻译、语音识别
+参考文档	见附录
+创建时间	2016年7月20日星期三
+创建人	邝作煜
+最新发布日期	2016年7月25日
+
+
+文档变更纪录
+更改人	日期	更改内容
+		
+		
+		
+		
+
+ 
+
+文档主要评审意见
+
+产品组
+评审人员	日期	意见
+		
+
+
+QA组
+评审人员	日期	意见
+		
+
+
+
+ 
+
+目    录
+
+技术概要	1
+HYBRID APP	1
+CORDOVA / PHONEGAP	1
+IONIC FRAMEWORK	1
+开发规划	1
+开发人员	1
+开发计划	3
+开发环境和工具	4
+开发规范	4
+总体设计	6
+概念术语描述	6
+术语1	6
+术语2	6
+基本设计描述	7
+系统总体逻辑结构图	7
+系统部署结构图	8
+主要界面流程描述	9
+功能1界面流程	9
+功能2界面流程	9
+模块列表	10
+数据结构	11
+接口规范	12
+<模块1 API>	12
+Interface1	12
+Interface2	12
+<模块2 API>	13
+<模块3 API>	13
+<数据库API>	13
+模块设计	14
+MODULE1设计	14
+模块设计描述	14
+模块界面描述	14
+MODULE2设计	15
+附录	16
+第三方组件	16
+参考资料	17
+附加文档	17
+
+
+
+
+
+
+
+ 
+技术概要
+Hybrid App
+
+Hybrid App（混合模式移动应用）是指介于web-app 、native-app这两者之间的app，兼具“Native App良好用户交互体验的优势”和“Web App跨平台开发的优势”。
+
+ 
+
+ 
+国内如掌上百度和淘宝客户端Android版，国外如Facebook，走的也是Hybrid App的路线
+
+Cordova / PhoneGap
+
+Phonegap是一款开源的开发框架，旨在让开发者使用HTML、Javascript、CSS等Web APIs开发跨平台的移动应用程序。它使开发者能够利用IOS，Android，Palm，Symbian,WP7,WP8,Bada和Blackberry智能手机的核心功能——包括地理定位，加速器，联系人，声音和振动等，此外PhoneGap拥有丰富的插件，可以调用。
+
+PhoneGap原本由Nitobi公司开发，早在2011年10月，Adobe收购了Nitobi Software和它的PhoneGap产品，然后宣布这个移动Web开发框架将会继续开源，并把它提交到Apache Incubator，以便完全接受ASF的管治。当然，由于Adobe拥有了PhoneGap商标，所以开源组织的这个PhoneGap v2.0版产品就更名为Apache Cordova，所以Cordova是PhoneGap贡献给Apache后的开源项目，是从PhoneGap中抽离出的核心代码，是驱动PhoneGap的核心引擎。
+
+Ionic Framework
+
+ionic是一个用来开发混合手机应用的，开源的，免费的代码库。可以优化html、css和js的性能，构建高效的应用程序，而且还可以用于构建Sass和AngularJS的优化
+
+
+开发规划
+
+开发人员
+
+角  色	主要职责	负责模块	备注
+项目经理
+邝作煜
+		项目全面负责
+	项目设计
+	主要框架/模块编写
+	项目进度控制		翻译模块	
+产品经理
+莫国聪		定义需求
+	产品监督
+	结果验证（测试）
+	用户文档	无	
+UI设计
+Echo		整体UI设计		UI模块	
+程序员
+彭志凡		程序开发
+	单元测试
+	集成测试		语音识别模块
+	离线下载模块
+	更新模块	
+程序员
+陈林聪		程序开发
+	单元测试
+	集成测试		情景模式模块
+	语速调节模块
+	设置模块	
+部署发布
+邝作煜		项目打包
+	项目部署及发布		项目集成
+	总体测试	
+
+
+
+
+
+
+
+ 
+
+开发计划
+
+<附开发计划表>
+
+
+ 
+
+开发环境和工具
+
+开发工具
+工具	版本	作用
+WebStorm 	11	jetbrains公司旗下一款JavaScript 开发工具。被广大中国JS开发者誉为“Web前端开发神器”、“最强大的HTML5编辑器”、“最智能的JavaScript IDE”等
+
+GapDebug	2.3.0	GapDebug是一款免费跨平台调试工具，用于调试基于Cordova或PhoneGap SDK构建的混合移动应用。此款调试工具集成了Safari Webkit调试器和Chrome开发工具，统一了OS X和Windows操作系统上的调试体验。
+
+PhoneGap Desktop - App
+PhoneGap Developer - App	0.3.3	Phonegap桌面开发工具 Phonegap Desktop-App可以在不搭建andrid 环境 不配置android sdk 或者不搭建xcode环境，或者不安装 node.js npm 的情况下就可以创建phoengap应用，并在手机客户端调试工具PhoneGap Developer App上测试
+
+Android SDK	Android - 22	用于生成Android APK 安装文件
+Xcode	7.3.1	用于生成IOS IPA 安装文件
+Node.js	3.9.5	用于Hybrid App开发
+Ionic Framework	1.7.16	Ionic Framework是一款基于HTML5创建类似于手机平台原生应用的一个开发框架。绑定了AngularJS和Sass
+
+Cordova	6.2.0	Cordova提供了一组设备相关的API，通过这组API，移动应用能够以JavaScript访问原生的设备功能，如摄像头、麦克风等。
+
+
+
+开发规范
+名称	描述
+编码规范	全部使用 UTF-8编码
+系统目录规范	如下图（1）
+	
+
+ 
+           图（1） 
+
+总体设计
+概念术语描述
+
+ASR
+语音识别：也被称为自动语音识别 Automatic Speech Recognition（ASR），其目标是将人类的语音中的词汇内容转换为计算机可读的输入，例如按键、二进制编码或者字符序列。
+
+IPA
+IOS 的APP文件格式。
+Sass
+	Syntactically Awesome Style Sheets , Sass 是对 CSS 的扩展，让 CSS 语言更强大、优雅。 它允许你使用变量、嵌套规则、 mixins、导入等众多功能， 并且完全兼容 CSS 语法
+ 
+
+基本设计描述
+方言翻译官是一个将中文翻译成各种方言的App，用户可以通过该App学习各种方言并应用到实际生活中。该App目前提供以下6种功能模块：
+
+	文本翻译模块
+提供中文翻译阳讲话的翻译，翻译后用户点击播放按钮可以播放相应的阳讲话。
+	语音识别模块
+用户通过点击麦克风按钮录入音频并立刻进行相应方言的翻译。
+	情景模式模块
+情景模式提供不同情景下不同方言的音频播放。
+	语速调节模块
+语速调节提供“正常”,“较快”，“较慢”3个语速调节。
+	下载模块
+用户可在下载模块下下载各种方言离线包。只有下载了方言离线包才能翻译该方言。
+	更新模块
+用户只需修改服务器上的更新文件即可实现更新。
+
+
+
+系统总体逻辑结构图
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+App结构图
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+主要界面流程描述
+
+
+功能1- 翻译界面流程
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+功能2界面流程
+
+ 
+
+模块列表
+
+
+模块名称(英文)	功能	备注
+文本翻译模块	翻译文本	目前之前中文向方言的翻译
+语音识别模块	自动语音识别	采用讯飞或百度语音组件
+情景模式模块	模拟情景对话并播放方言	丰富的情景模式便于方言学习
+语速调节模块	调节语速	3种语速条件（正常/较快/较慢）
+下载模块	语音离线包下载	语音包与代码分离，便于维护。
+更新模块	版本更新	支持数据包更新及代码更新
+
+
+
+
+ 
+
+
+数据结构
+
+JSON列表
+名称	作用
+lang.json	存储要翻译语言
+dialogues_<lang>.json	<lang> 代表翻译语言，一个情景数据包对应一个dialogues_<lang>.json，例如dialogues_YANGJIANG.json 是阳江话情景模式。
+trans_<lang>.json	<lang> 代表翻译语言，一个离线翻译数据包对应一个trans_<lang>.json，例如trans_YANGJIANG.json 是阳江话翻译文件。
+
+数据列表
+路径	描述
+/www/data/audio/trans_<lang>/*	该路径存储离线音频文件。例如
+/www/data/audio/trans_YANGJiANG/*.wav 存储阳江话离线数据文件
+/www/data/audio/dialogues_<lang>/*	该路径存储情景模式音频文件。例如
+/www/data/audio/dialogues_YANGJiANG/*.wav 存储阳江话情景模式文件
+
+
+
+
+ 
+接口规范
+
+<翻译模块 API>
+
+	描述
+控制层可以调用该模块API实现翻译功能。
+
+接口TranslateService
+factory('TranslateService', function ($http, $q,$localForage,OfflineData)
+
+	Function1
+load: function (lang)
+
+功能描述
+App初始化时加载JSON 文件
+
+参数	描述
+lang	语言，例如YANGJIANG
+
+	Function2
+translate: function (data,lang)
+<翻译功能>
+param1 - <param1 description>
+param2 - <param2 description>
+
+
+Interface2
+
+
+
+
+ 
+
+<模块2 API>
+
+<模块3 API>
+
+
+模块设计
+
+
+Module1设计
+
+<更具具体情况细化模块设计>
+
+模块设计描述
+
+模块界面描述
+
+
+ 
+
+Module2设计
+
+ 
+
+附录
+第三方组件
+
+Cordova组件
+组件名称	版本	用途
+		
+
+讯飞组件
+组件名称	版本	用途
+		
+
+ 
+
+参考资料
+
+Ionic Framework: http://ionicframework.com/
+Cordova: https://cordova.apache.org/
+PhoneGap: http://phonegap.com/
+AngularJS: https://angularjs.org/
+
+
+附加文档
+
+文档名称	文件名	描述
+		
+		
+		
+		
+		
+
