@@ -1,0 +1,1065 @@
+var voice_lang = 'zh';
+var isLive = 0;
+angular.module('starter.controllers', [])
+  .controller('TabsCtrl', function ($scope, $state, $ionicTabsDelegate) {
+
+    $scope.goForward = function () {
+      var selected = $ionicTabsDelegate.selectedIndex();
+      if (selected != -1) {
+        $ionicTabsDelegate.select(selected + 1);
+      }
+    }
+
+    $scope.goBack = function () {
+      var selected = $ionicTabsDelegate.selectedIndex();
+      if (selected != -1 && selected != 0) {
+        $ionicTabsDelegate.select(selected - 1);
+      }
+    }
+
+
+      $scope.tabList = [
+        'tab.dash',
+        'tab.yuyin',
+        'tab.dialogues',
+        'tab.setting'
+      ];
+
+      $scope.onSwipeLeft = function() {
+        for(var i=0; i < $scope.tabList.length; i++) {
+          if ($scope.tabList[i] == $state.current.name && i != $scope.tabList.length){
+            $state.go($scope.tabList[i+1]);
+            break;
+          }
+        }
+      };
+
+      $scope.onSwipeRight = function() {
+        for(var i=0; i < $scope.tabList.length; i++) {
+          if ($scope.tabList[i] == $state.current.name && i != 0){
+            $state.go($scope.tabList[i-1]);
+            break;
+          }
+        }
+      };
+
+      $scope.$on('$ionicView.enter', function() {
+        for(var i=0; i < $scope.tabList.length; i++) {
+          if ($scope.tabList[i] == $state.current.name){
+            $scope.activeTab = i;
+            break;
+          }
+        }
+      });
+
+    })
+
+
+  .controller('DashCtrl', function ($scope, $timeout, $ionicPopup, ServerData, TranslateService,
+                                    lang, $ionicModal, $ionicListDelegate, $ionicLoading, netWorkService, $ionicPlatform, downloadService) {
+
+    /*$ionicPlatform.ready(function () {
+      netWorkService.check(0);
+    });*/
+
+
+    $scope.lang = lang;
+    $scope.model = {message: ""};
+    $scope.translate = {message: "", result: []};
+    $scope.hideLogo = function () {
+      $scope.logoHide = true;
+      $scope.hasTranslate = false;
+    };
+    $scope.showLogo = function () {
+      $scope.logoHide = false;
+    };
+    $scope.close = function () {
+      $scope.model.message = "";
+      $scope.logoHide = false;
+      $scope.hasTranslate = false;
+    };
+    $scope.loadMore = function () {
+      $scope.$broadcast('scroll.infiniteScrollComplete');
+    };
+    $scope.clear = function () {
+      $scope.model.message = "";
+      $scope.hasTranslate = false;
+      $scope.logoHide = false;
+      ///$scope.close();
+    };
+    $scope.translate = function () {
+      $scope.translate.result = [];
+      $scope.playicon = false;
+      // if (!TranslateService.hasLang($scope.lang.id)) {
+      //   ServerData.alert('请前往设置窗口下载数据包:&nbsp;' + $scope.lang.name);
+      // } else
+
+      isLive = 0;
+
+      if ($scope.model.message.trim() == '') {
+        ServerData.alert('翻译内容不能为空。');
+      } else {
+
+        $scope.translate.message = $scope.model.message;
+        //$scope.model.message = "";
+        //$scope.logoHide = false;
+        this.addData();
+        $ionicLoading.show();
+        $scope.showResult = [];
+
+
+        if (TranslateService.hasLang($scope.lang.id)) {
+
+          var promise = TranslateService.translate($scope.translate.message, $scope.lang.id);
+          promise.then(function (data) {
+            var test = [];
+            for (var i in data) {
+              if (data[i] != null) {
+                test.push(data[i])
+              } else {
+                //test.push("null");
+              }
+            }
+            test = "[" + test + "]";
+            console.log("test=" + test);
+            $timeout(function () {
+              $scope.hasTranslate = true;
+              $scope.translate.result = JSON.parse(test);
+              $ionicLoading.hide();
+            }, 500);
+          });
+        } else {
+
+          TranslateService.translateLive($scope.translate.message, $scope.lang.id, function (items) {
+
+
+            isLive = 1;
+            var data = [];
+            items.forEach(function (item) {
+              if (item != null)data.push(item);
+            });
+
+            data = "[" + data + "]";
+            $timeout(function () {
+              $scope.hasTranslate = true;
+              $scope.translate.result = JSON.parse(data);
+              for(var r in $scope.translate.message){
+            	  for(var n in $scope.translate.result){
+            		 if( $scope.translate.message[r] == $scope.translate.result[n].val ){
+            			 $scope.showResult.push({'name': $scope.translate.message[r], 'hasResult': true});
+            			 break;
+            		 }
+            		 if( n == ($scope.translate.result.length -1) ){
+            			 $scope.showResult.push({'name': $scope.translate.message[r], 'hasResult': false});
+            		 }
+            		 
+            	  }
+              }
+              
+              $scope.showResult.forEach(function (rst) {
+                  console.log("rst = " + rst.name + ","+ rst.hasResult);
+                });
+              
+              $ionicLoading.hide();
+
+            }, 500);
+
+          }, function (network){
+            $timeout(function () {
+              $ionicLoading.hide();
+              $ionicPopup.alert({
+               template: '网络好像不可用哦!',
+               title: '提示信息'
+               });
+            }, 500);
+              //console.log("network: " +network );
+          });
+        }
+
+      }
+
+
+    };
+    $scope.resub = function () {
+      $scope.hasTranslate = false;
+    };
+    $scope.reTranslate = function (index) {
+      var idx = $scope.storedData.length - index - 1;
+      $scope.model.message = $scope.storedData[idx];
+      this.translate();
+    };
+
+    //var audio = document.getElementById('fr').contentWindow.document.getElementById('audio');
+    var audio = document.getElementById('myaudio');
+    var timer;
+    var j;
+    var audioPath;
+
+    $scope.playAudio = function () {
+      j = 0;
+      $scope.playicon = true;
+      var medias = $scope.translate.result;
+      
+      $scope.audioLength = medias.length;
+      if(downloadService.hasDownloaded($scope.lang.id)){
+        if (ionic.Platform.isAndroid()) {
+          audioPath= cordova.file.externalDataDirectory ;
+        }else if(ionic.Platform.isIOS()){
+          audioPath = cordova.file.applicationStorageDirectory + "Library/files/" ;
+
+        }
+      }else{
+        //audioPath = server ;
+    	  //audioPath = "data/json/";
+    	  audioPath = "http://localhost:8080/download/data/json/";
+      }
+      TranslateService.loadAudios(audioPath, medias, function(errValues){
+    	  if(errValues.length > 0){
+    			var confirmPopup = $ionicPopup.confirm({
+    		        title: '未找到以下音频,是否继续？',
+    		        cssClass: 'confirm-popup',
+    		        template: JSON.stringify(errValues),
+    		        cancelText: '取消',
+    		        okText: '继续'
+    		      });
+    			confirmPopup.then(function (resp){
+    				console.log("keep continue.");
+    				for(var e in errValues){
+    					for(var m in medias){
+    						if(medias[m].val == errValues[e]){
+    							console.log("删除 "+medias[m].val);
+    							medias.splice(m,1);
+    						}
+    					}
+    				}
+    				$scope.audioLength =  medias.length;
+    				console.log("length = " + medias.length);
+    				
+    				audio.src = audioPath + medias[0].audio;
+  	        	        console.log("start  playing " + audio.src);
+  	        	        
+  	        	        audio.playbackRate = 1.5;
+  	        	        audio.play();
+    			})
+    			
+    		}else{
+    			//play()
+    			audio.src = audioPath + medias[0].audio;
+    	        console.log("start  playing " + audio.src);
+    	        audio.playbackRate = 1.5;
+    	        audio.play();
+    		}
+    	  
+    	  
+      });
+    		
+      
+     /* if (medias.length > 0) {
+    	  
+
+        audio.src = audioPath + medias[0].audio;
+        console.log("audio src =" + audio.src);
+        audio.play();
+        audio.playbackRate = 1.5;
+
+      }*/
+    /*var loaded = 0;
+  	var errVals = [];*/
+  	//var medias = $scope.translate.result;
+  	/*for (var i in medias) {
+  		 var loadAudio = new Audio();
+  		loadAudio.src =  audioPath + medias[i].audio;
+  		loadAudio.name = medias[i].val;
+  		 console.log("audio.name = "+ loadAudio.name)
+   	     console.log("load url = "+ audioPath + medias[i].audio);
+  		loadAudio.addEventListener('canplaythrough', function(){
+  	        	loaded++;
+  	        	if (loaded == medias.length){
+  	        		if(errVals.length > 0){
+  	        			
+  	        			var confirmPopup = $ionicPopup.confirm({
+  	        		        title: '未找到以下音频,是否继续？',
+  	        		        cssClass: 'confirm-popup',
+  	        		        template: JSON.stringify(errVals),
+  	        		        cancelText: '取消',
+  	        		        okText: '继续'
+  	        		      });
+  	        			confirmPopup.then(function (resp){
+  	        				console.log("keep continue.");
+  	        				audio.src = audioPath + medias[0].audio;
+  	  	        	        console.log("start  playing " + audio.src);
+  	  	        	        audio.playbackRate = 1.5;
+  	  	        	        audio.play();
+  	        			})
+  	        			
+  	        		}else{
+  	        			//play()
+  	        			audio.src = audioPath + medias[0].audio;
+  	        	        console.log("start  playing " + audio.src);
+  	        	        audio.playbackRate = 1.5;
+  	        	        audio.play();
+  	        		}
+  	            }//end if loaded == medias.length
+  	        }, false);
+  		loadAudio.addEventListener('error', function(e){
+   	    	    loaded++;
+  	        	console.log("error val "+e.target.name);
+  	        	console.log("error code "+e.target.error.code);
+  	        	console.log("error src "+e.target.src);
+  	        	errVals.push(e.target.name);
+  	        	if (loaded == medias.length){
+  	        		if(errVals.length > 0){
+  	        			
+  	        			var confirmPopup = $ionicPopup.confirm({
+  	        		        title: '未找到以下音频,是否继续？',
+  	        		        cssClass: 'confirm-popup',
+  	        		        template: JSON.stringify(errVals),
+  	        		        cancelText: '取消',
+  	        		        okText: '继续'
+  	        		      });
+  	        			confirmPopup.then(function (resp){
+  	        				console.log("keep continue.");
+  	        			})
+  	        			
+  	        		}else{
+  	        			//play()
+  	        		}
+  	            }//end if loaded == medias.length
+  	        	
+  	        });
+  	}*/
+    };
+    
+    $scope.preLoading = function(audioPath,medias){
+    	var loaded = 0;
+      	var errVals = [];
+      	for (var i in medias) {
+      		 var loadAudio = new Audio();
+      		 //loadAudios.push(audio);
+      		loadAudio.src =  audioPath + medias[i].audio;
+      		loadAudio.name = medias[i].val;
+      		 console.log("audio.name = "+ loadAudio.name)
+       	     console.log("load url = "+ audioPath + medias[i].audio);
+      		loadAudio.addEventListener('canplaythrough', function(){
+      	        	loaded++;
+      	        	if (loaded == medias.length){
+      	        		return errVals;
+      	        	}
+      	        }, false);
+      		loadAudio.addEventListener('error', function(e){
+       	    	    loaded++;
+      	        	console.log("error val "+e.target.name);
+      	        	console.log("error code "+e.target.error.code);
+      	        	console.log("error src "+e.target.src);
+      	        	errVals.push(e.target.name);
+      	        	if (loaded == medias.length){
+      	        		return errVals;
+      	            }//end if loaded == medias.length
+      	        	
+      	        });
+      	}
+    };
+    
+    $scope.preloadAudio = function(){
+    	var loaded = 0;
+    	var errVals = [];
+    	var medias = $scope.translate.result;
+    	if(downloadService.hasDownloaded($scope.lang.id)){
+            if (ionic.Platform.isAndroid()) {
+              audioPath= cordova.file.externalDataDirectory ;
+            }else if(ionic.Platform.isIOS()){
+              audioPath = cordova.file.applicationStorageDirectory + "Library/files/" ;
+
+            }
+          }else{
+            //audioPath = server ;
+        	  audioPath = "http://localhost:8080/download/data/json/";
+          }
+    	
+    	for (var i in medias) {
+    		 var audio = new Audio();
+    		 //loadAudios.push(audio);
+    		 audio.src =  audioPath + medias[i].audio;
+    		 audio.name = medias[i].val;
+    		 console.log("audio.name = "+ audio.name)
+     	     console.log("load url = "+ audioPath + medias[i].audio);
+    	        // once this file loads, it will call loadedAudio()
+    	        // the file will be kept by the browser as cache
+     	     audio.addEventListener('canplaythrough', function(){
+    	        	loaded++;
+    	        	if (loaded == medias.length){
+    	        		if(errVals.length > 0){
+    	        			
+    	        			var confirmPopup = $ionicPopup.confirm({
+    	        		        title: '未找到以下音频,是否继续？',
+    	        		        cssClass: 'confirm-popup',
+    	        		        template: JSON.stringify(errVals),
+    	        		        cancelText: '取消',
+    	        		        okText: '继续'
+    	        		      });
+    	        			confirmPopup.then(function (resp){
+    	        				console.log("keep continue.");
+    	        			})
+    	        			
+    	        		}else{
+    	        			//play()
+    	        		}
+    	            	// all have loaded
+    	            	//init();
+    	            }//end if loaded == medias.length
+    	        }, false);
+     	     audio.addEventListener('error', function(e){
+     	    	    loaded++;
+    	        	console.log("error val "+e.target.name);
+    	        	console.log("error code "+e.target.error.code);
+    	        	console.log("error src "+e.target.src);
+    	        	errVals.push(e.target.name);
+    	        	if (loaded == medias.length){
+    	        		if(errVals.length > 0){
+    	        			
+    	        			var confirmPopup = $ionicPopup.confirm({
+    	        		        title: '未找到以下音频,是否继续？',
+    	        		        cssClass: 'confirm-popup',
+    	        		        template: JSON.stringify(errVals),
+    	        		        cancelText: '取消',
+    	        		        okText: '继续'
+    	        		      });
+    	        			confirmPopup.then(function (resp){
+    	        				console.log("keep continue.");
+    	        			})
+    	        			
+    	        		}else{
+    	        			//play()
+    	        		}
+    	            	// all have loaded
+    	            	//init();
+    	            }//end if loaded == medias.length
+    	        	
+    	        });
+    	}
+    };
+
+    audio.addEventListener('ended', function () {
+      j++;
+      $scope.$apply(function () {
+        if (j < $scope.audioLength) {
+          audio.src = audioPath + $scope.translate.result[j].audio;
+          audio.play();
+          audio.playbackRate = 1.5;
+        }else{
+          $scope.playicon = false;
+        }
+
+      });
+    }, false);
+
+    $scope.$on('$ionicView.enter', function () {
+      console.log("dash enter");
+
+      localforage.getItem('storedDataForage', function (err, value) {
+        if (err) {
+          $scope.storedData = [];
+        } else if (value == null) {
+          localforage.setItem('storedDataForage', []);
+          $scope.storedData = [];
+        } else {
+          $scope.storedData = value;
+        }
+      });
+    });
+
+    $scope.$on('$ionicView.beforeLeave', function () {
+      console.log("leave");
+      audio.pause();
+      $scope.play_icon = true;
+      $scope.play_icon2 = false;
+
+    });
+    //Add data to localForage
+    $scope.addData = function () {
+      if ($scope.storedData.length >= 10) {
+        this.removeData(9);
+      }
+      $scope.storedData.push($scope.translate.message);
+      localforage.setItem('storedDataForage', $scope.storedData).then(function (value) {
+        //console.log($scope.translate.message + ' was added!');
+      }, function (error) {
+        console.error(error);
+      });
+    };
+
+    //Remove data to localForage
+    $scope.removeData = function (index) {
+      var idx = $scope.storedData.length - index - 1;
+      console.log("index=" + index + ",idx=" + idx);
+      $scope.storedData.splice(idx, 1);
+      $ionicListDelegate.closeOptionButtons();
+      localforage.setItem('storedDataForage', $scope.storedData);
+    };
+    $scope.clearData = function () {
+      console.log("clear history");
+      $scope.storedData = [];
+      localforage.setItem('storedDataForage', $scope.storedData);
+    };
+
+    //Modal................................................................
+    $ionicModal.fromTemplateUrl('templates/lang.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function (modal) {
+      $scope.modal = modal;
+    })
+    $scope.openModal = function () {
+      $scope.modal.show();
+    }
+    $scope.sltLang = function () {
+      lang.name = TranslateService.getNamebyId(lang.id);
+      $scope.lang = lang;
+      localforage.setItem('lang', {id: lang.id, name: lang.name});
+      $scope.modal.hide();
+      /* if (TranslateService.hasLang(lang.id)) {
+       } else {
+       ServerData.alert('请前往设置窗口下载数据包:&nbsp;' + lang.name);
+       }*/
+    };
+    $scope.$on('$destroy', function () {
+      $scope.modal.remove();
+    });
+  })
+
+  .controller('DialoguesCtrl', function ($http, $scope, $state, $ionicModal, ServerData,
+                                         TranslateService, DialogueService, DialogueLang, netWorkService, $rootScope) {
+    $scope.DialogueLang = DialogueLang;
+    console.log("dialoguelang="+DialogueLang.id);
+    var pmis = DialogueService.init(DialogueLang.id);
+    pmis.then(function(data){
+      DialogueService.setDia(data.results);
+      $scope.dialogues = data.results;
+    });
+
+    /*if (TranslateService.hasLang(DialogueLang.id)) {
+      isLive = 0;
+      DialogueService.all(DialogueLang.id).success(function (response) {
+        DialogueService.setDia(response.results);
+        $scope.dialogues = response.results;
+      }).error(function () {
+
+      });
+
+    } else {
+      DialogueService.all_live(DialogueLang.id).success(function (response) {
+        isLive = 1;
+        DialogueService.setDia(response.results);
+        $scope.dialogues = response.results;
+      });
+    }*/
+
+
+    $scope.gotoDetail = function (dialogueId) {
+      $state.go("tab.dialogue-detail", {dialogueId: dialogueId});
+    };
+
+    /*Modal                        ************************************************************************/
+    $ionicModal.fromTemplateUrl('templates/lang-dialogue.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function (modal) {
+      $scope.modal = modal;
+    });
+
+    $scope.openModal = function () {
+      $scope.modal.show();
+    };
+
+    $scope.sltLang = function () {
+      DialogueLang.name = TranslateService.getNamebyId(DialogueLang.id);
+      $scope.DialogueLang = DialogueLang;
+      localforage.setItem('lang_dia', {id: DialogueLang.id, name: DialogueLang.name});
+      $scope.modal.hide();
+        console.log("dialoguelang="+DialogueLang.id);
+        var promise = DialogueService.init(DialogueLang.id);
+        promise.then(function(data){
+          DialogueService.setDia(data.results);
+          $scope.dialogues = data.results;
+        },function(error){
+        	console.log(error);
+        	DialogueService.setDia("");
+            $scope.dialogues = "";
+        });
+
+    };
+    $scope.$on('$destroy', function () {
+      $scope.modal.remove();
+    });
+    /*Modal                        ************************************************************************/
+
+  })
+
+  .controller('DialogueDetailCtrl', function (DialogueLang, $scope, $stateParams, DialogueService, $timeout, Speed, $rootScope,downloadService) {
+
+    $scope.$on('$ionicView.enter', function() {
+      $scope.dialogue = DialogueService.get($stateParams.dialogueId);
+      $scope.details = $scope.dialogue.subList;
+      $scope.DialogueLang = DialogueLang;
+    });
+
+    $scope.play_icon = [];
+    $scope.play_icon2 = [];
+
+    var testAudio;
+    var audioPath;
+    var audio = document.getElementById('fr').contentWindow.document.getElementById('audio');
+    //$scope.details = DialogueService.get($stateParams.dialogueId).subList;
+
+    $scope.playfor = function (id, subAudio, key) {
+
+      $scope.play_icon[id] = false;
+      $scope.play_icon2[id] = true;
+
+      $scope.detail_subid = id;
+      $scope.index = key;
+
+      console.log("dialogue detail page lang ="+DialogueLang.id);
+      if(downloadService.hasDownloaded(DialogueLang.id)){
+        if (ionic.Platform.isAndroid()) {
+          audioPath= cordova.file.externalDataDirectory ;
+        }else if(ionic.Platform.isIOS()){
+          audioPath = cordova.file.applicationStorageDirectory + "Library/files/" ;
+        }
+      }else{
+       // audioPath = server ;
+    	  audioPath = "data/json/";
+      }
+      //var audio_url = audioPath + subAudio;
+
+      /*testAudio = new Audio(audio_url);
+      testAudio.playbackRate = Speed.value;
+      console.log('testAudio.playbackRate = ' + testAudio.playbackRate);
+      testAudio.play();
+      testAudio.addEventListener('ended', function () {
+        $timeout(function () {
+          $scope.play_icon[id] = true;
+        }, 1500);
+        $scope.play_icon2[id] = false;
+      }, false);*/
+
+      audio.src = audioPath + subAudio;
+      console.log("audio src =" + audio.src);
+
+      audio.playbackRate = Speed.value;
+      audio.play();
+      audio.addEventListener('playing',function(){
+        console.log("audio playing");
+      },false);
+
+      audio.addEventListener('ended', function () {
+        $scope.$apply(function () {
+          $scope.play_icon[id] = true;
+          $scope.play_icon2[id] = false;
+        })
+      }, false);
+    };
+
+  })
+
+  .controller('YuyinCtrl', function ($scope, $ionicSideMenuDelegate, $state,
+                                     $rootScope, $ionicModal, TranslateService, ServerData, YuyinLang, $timeout) {
+    $scope.index = -1;
+    $scope.playicon = false;
+
+    $scope.lang = {'id': 'YANGJIANG'};
+    $scope.Luyinlang = 'zh';
+    $scope.sltLang = function (langid) {
+      YuyinLang.name = TranslateService.getNamebyId(langid);
+      $scope.YuyinLang = YuyinLang;
+      localforage.setItem('lang_yuyin', {id: YuyinLang.id, name: YuyinLang.name});
+
+    };
+
+    var audio = document.getElementById('fr').contentWindow.document.getElementById('audio');
+
+    $scope.goBack = function () {
+      $rootScope.hideTabs = '';
+      $state.go("tab.dash");
+    };
+
+    $scope.langChange = function (Luyinlang) {
+      voice_lang = Luyinlang;
+      console.log(voice_lang)
+    };
+
+    var j;
+
+    $scope.translate = function (message, key) {
+
+      $scope.translate.result = [];
+      $scope.playicon = true;
+      $scope.index = key;
+
+      if (message.trim() == '') {
+        ServerData.alert('翻译内容不能为空。');
+      } else {
+        $scope.translate.message = message;
+        TranslateService.translateLive($scope.translate.message, YuyinLang.id, function (items) {
+          var data = [];
+          items.forEach(function (item) {
+            if (item != null)data.push(item);
+          });
+          data = "[" + data + "]";
+          $timeout(function () {
+            $scope.hasTranslate = true;
+            $scope.translate.result = JSON.parse(data);
+
+            var medias = $scope.translate.result;
+            $scope.audioLength = medias.length;
+            if (medias.length > 0) {
+              audio.src = server + medias[0].audio;
+              audio.play();
+              j = 0;
+            }
+          }, 500);
+        });
+      }
+    };
+
+    audio.addEventListener('ended', function () {
+      j++;
+      $scope.$apply(function () {
+        if (j < $scope.audioLength) {
+          audio.src = server + $scope.translate.result[j].audio;
+          audio.playbackRate = 1;
+          audio.play();
+        }else{
+          $scope.playicon = false;
+        }
+      });
+    }, false);
+
+  })
+
+  .controller('SpeakCtrl', function ($scope, $ionicSideMenuDelegate) {
+    /*$scope.toggleLeft = function() {
+     $ionicSideMenuDelegate.toggleLeft();
+     };*/
+
+    console.log("SpeakCtrl");
+  })
+
+  .controller('SettingCtrl', function ($scope, Speed,$timeout, ServerData,$ionicLoading) {
+    $scope.speedRate = Speed.value;
+
+    $scope.speedChange = function (rate) {
+      $scope.speedRate = rate;
+      Speed.value = rate;
+      console.log("rate=" + rate + ",speedRate=" + $scope.speedRate);
+
+    };
+
+    $scope.checkVersion = function(){
+      $ionicLoading.show();
+      $timeout(function () {
+        $ionicLoading.hide();
+        ServerData.alert("该版本已经是最新版本!")
+      }, 600);
+    }
+  })
+
+  .controller('DownloadCtrl', function ($scope, TranslateService, $ionicSlideBoxDelegate, $ionicPopup, $interval, $state,
+                                        $timeout, $ionicActionSheet, $cordovaFileTransfer, ServerData,
+                                        $cordovaZip, $cordovaFile, lang_dialogues, downloadService,downloadlist) {
+    $scope.langlist = [];
+    $scope.$on('$ionicView.enter', function() {
+      console.log("enter length = "+$scope.langlist.length);
+      var promise = downloadService.check();
+      promise.then(function(data){
+        $scope.langlist = data;
+        for(var i in $scope.langlist){
+          console.log("langlist ["+ i+"] = "+$scope.langlist[i].id)
+          if(downloadService.hasDownloaded($scope.langlist[i].id)){
+            $scope.langlist[i].status = "1";
+          }
+        }
+      });
+
+    });
+
+    var downloading = false;
+    var waitinglist = [];
+    var filedwn = $cordovaFileTransfer;
+    $scope.strDownload = function (langId){
+      console.log("downloadLang="+ $scope.langlist[langId]);
+      $scope.langlist[langId].progressval = 0 ;
+      if(downloading){
+        $scope.langlist[langId].status = "3";
+        waitinglist.push(langId);
+      }else{
+        downloading = true;
+        $scope.langlist[langId].status = "2";
+        var filePath
+        if (ionic.Platform.isAndroid()) {
+          filePath = cordova.file.externalDataDirectory
+        }else if(ionic.Platform.isIOS()){
+          filePath = "cdvfile://localhost/persistent/"
+        }
+        var date =  new Date().toDateString();
+        var fileName = filePath + langId + ".zip";
+        var uri = encodeURI(server + langId + ".zip");
+        var targetPath = filePath;
+        var trustHosts = true;
+        var options = {};
+        console.log("filename="+fileName);
+        console.log("iOS path ="+cordova.file.dataDirectory);
+        console.log("get from "+ server+langId + ".zip")
+        filedwn.download(uri, fileName, options, trustHosts).then(function (result) {
+          unzipFile(langId, fileName,targetPath);
+          $scope.startNextDownload();
+
+        }, function (err) {
+          console.log("error code = "+JSON.stringify(err));
+          $interval.cancel($scope.langlist[langId].stopinterval);
+          $scope.langlist[langId].status = '0';
+          $scope.langlist[langId].progressval = 0 ;
+          if(waitinglist.length == 0 && !downloading )downloading = false;
+          if(err.code == 3){
+            waitinglist = [];
+            downloading = false;
+            ServerData.alert('网络未连接，请连接WIFI下载离线翻译数据包');
+          }else
+          if(err.code != 4 ){
+            waitinglist = [];
+            downloading = false;
+            ServerData.alert('下载失败, 请重试!');
+          }
+          return;
+        }, function (progress) {
+          $timeout(function () {
+            var downloadProgress = (progress.loaded / progress.total) * 100;
+            $scope.langlist[langId].progressval = Math.floor(downloadProgress);
+            if ($scope.langlist[langId].progressval > 99) {
+              $interval.cancel($scope.langlist[langId].stopinterval);
+              $scope.langlist[langId].status = '1';
+              $scope.langlist[langId].stopinterval = true;
+              return;
+            }
+          });
+        });//ended progress
+
+      }//end downloading
+
+      /*downloader.init({folder: langId,fileSystem: filePath, unzip: true});
+      downloader.get(server+langId + ".zip");
+
+      document.addEventListener("DOWNLOADER_downloadProgress", function(event){
+        var data = event.data;
+        $scope.langlist[langId].progressval = data;
+
+      });
+
+      document.addEventListener("DOWNLOADER_downloadSuccess", function(event){
+        var data = event.data;
+        $scope.langlist[langId].status = "1";
+
+      });*/
+
+    };
+
+    $scope.startNextDownload = function() {
+      console.log("start next download "+waitinglist.length)
+      downloading = false;
+      if(waitinglist.length > 0 ){
+        var lang = waitinglist[0];
+        console.log("next lang = "+ lang);
+        waitinglist.splice(0,1);
+        console.log(waitinglist.length);
+        $scope.langlist[lang].progressval = 0 ;
+        this.strDownload(lang);
+
+      }
+    };
+
+    $scope.delete0 = function(langId) {
+      var confirmPopup = $ionicPopup.confirm({
+        title: '提示',
+        template: '确定删除本地文件 ?',
+        cancelText: '取消',
+        okText: '确定'
+      });
+      confirmPopup.then(function(res) {
+        if(res) {
+          var filePath
+          if (ionic.Platform.isAndroid()) {
+            filePath = cordova.file.externalDataDirectory
+          }else if(ionic.Platform.isIOS()){
+            //filePath = cordova.file.documentsDirectory
+            filePath = "cdvfile://localhost/persistent/";
+          }
+          $scope.langlist[langId].status = "0";
+          $scope.langlist[langId].progressval = 0;
+          deleteFolder(filePath,langId);
+          for(var i in downloadlist){
+            if(downloadlist[i].id == langId){
+              downloadlist.splice(i,1);
+              localStorage.setItem('downloadlist', JSON.stringify(downloadlist));
+            }
+          }
+          for(var i in downloadlist){
+            console.log("downloadlist = " + i + ","+downloadlist[i].id);
+          }
+
+
+        } else {
+          console.log('You are not sure');
+        }
+      });
+    };
+
+
+    $scope.stopDownload = function (langId){
+      console.log("stop download "+langId + " status = "+ $scope.langlist[langId].status);
+      if($scope.langlist[langId].status == "3"){
+        console.log("waiting list cancel download.");
+        $scope.langlist[langId].status = "0";
+        $scope.langlist[langId].progressval = 0 ;
+        for(var i in waitinglist){
+          if(waitinglist[i] == langId){
+            waitinglist.splice(i,1);
+          }
+        }
+        if(waitinglist.length == 0 && !downloading )downloading = false;
+      }else{
+        $scope.langlist[langId].status = "0";
+        $scope.langlist[langId].progressval = 0 ;
+        $interval.cancel($scope.langlist[langId].stopinterval);
+        $cordovaFileTransfer.abort();
+        $scope.startNextDownload();
+
+
+      }
+
+
+    };
+
+
+ 
+    
+
+  
+
+    function unzipFile(langId, fileName, directory) {
+      $cordovaZip.unzip(fileName, directory)
+        .then(function () {
+          console.log("Files unzipped success.");
+          downloadlist.push({"id":langId});
+          localStorage.setItem('downloadlist', JSON.stringify(downloadlist));
+          $scope.langlist[langId].status = '1';
+          $scope.langlist[langId].progressval = 100;
+
+          deleteFile(directory, fileName.substr(fileName.lastIndexOf("/") + 1, fileName.length));
+        }, function () {
+          console.log("Failed to unzip "+fileName);
+          ServerData.alert('离线数据包解压失败, 请重试!');
+        }, function (progressEvent) {
+          //console.log(progressEvent);
+        });
+    };
+
+    function unzipFileAndLoadLang(fileName, directory, langId) {
+      $cordovaZip.unzip(fileName, directory)
+        .then(function () {
+          console.log("Files unzipped");
+          TranslateService.load(langId);
+          deleteFile(filePath, fileName.substr(fileName.lastIndexOf("/") + 1, fileName.length));
+        }, function () {
+          console.log("Failed to unzip");
+        }, function (progressEvent) {
+          //console.log(progressEvent);
+
+        });
+    };
+
+    function deleteFile(filePath, fileName) {
+      console.log("delete file name = " + fileName);
+      console.log("delete file path = " + filePath);
+      $cordovaFile.removeFile(filePath, fileName)
+        .then(function (success) {
+          console.log("deleted success");
+        }, function (error) {
+          console.log("delete failed");
+        });
+    };
+
+    function deleteFolder(folderPath, folderName) {
+      console.log("delete folder name = " + folderName);
+      console.log("delete folder path = " + folderPath);
+      $cordovaFile.removeRecursively(folderPath, folderName)
+          .then(function (success) {
+            console.log("deleted folder success");
+          }, function (error) {
+            console.log("delete folder failed");
+          });
+    };
+
+
+
+  })
+
+  .controller('actionsheetCtl', function ($scope, $ionicActionSheet, $timeout, ServerData, $ionicPopup) {
+    $scope.show = function () {
+
+      var hideSheet = $ionicActionSheet.show({
+        /*buttons: [
+         { text: 'Move' }
+         ],*/
+        destructiveText: '<i class=\"icon ion-trash-a assertive\"></i><b>确定清除历史记录</b>',
+        /*titleText: 'Modify your album',*/
+        cancelText: '<b>取消</b>',
+        cancel: function () {
+          // add cancel code..
+        },
+        destructiveButtonClicked: function () {
+          //console.log("delete historys.");
+          //return true;
+          $scope.storedData = [];
+          localforage.setItem('storedDataForage', []);
+          ServerData.alert('清除成功！');
+          return true;
+
+        },
+        buttonClicked: function (index) {
+          return true;
+        }
+      });
+
+      /*$timeout(function() {
+       hideSheet();
+       }, 2000);*/
+
+    };
+  })
+
+
+  .controller('AdvanceCtrl', function ($scope, $state, advanceService) {
+
+    $scope.msgLists = JSON.parse(localStorage.getItem('msgLists')) || [];
+
+    $scope.goBack = function () {
+
+      $state.go("tab.setting");
+
+    };
+
+    $scope.sendMessage = function () {
+
+      advanceService.send($scope.msg);
+
+      $scope.msgLists.push({'time': new Date().toLocaleString(), 'value': $scope.msg});
+
+      localStorage.setItem('msgLists', JSON.stringify($scope.msgLists));
+
+      $scope.msg = '';
+
+    };
+
+
+  });
+
