@@ -1,3 +1,4 @@
+var reg = new RegExp("^([\u4E00-\uFA29]|[\uE7C7-\uE7F3]|[a-zA-Z0-9])*$"); 
 var voice_lang = 'zh';
 var isLive = 0;
 angular.module('starter.controllers', [])
