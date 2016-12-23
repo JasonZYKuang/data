@@ -3,7 +3,7 @@ cordova.define("cordova/plugins/BaiduASR",
   function(require, exports, module) {
     var exec = require("cordova/exec");
     var BaiduASR = function() {};
-    BaiduASR.prototype.startRecognizer = function(successCallback, errorCallback) {
+    BaiduASR.prototype.startRecognizer = function(langId,successCallback, errorCallback) {
         
         if (typeof errorCallback != "function")  {
             console.log("error");
@@ -14,7 +14,7 @@ cordova.define("cordova/plugins/BaiduASR",
             console.log("error");
             return
         }
-        exec(successCallback, errorCallback, 'BaiduASR', 'startRecognizer', []);
+        exec(successCallback, errorCallback, 'BaiduASR', 'startRecognizer', [{"langId":langId}]);
     };
 	
     var BaiduASR = new BaiduASR();
