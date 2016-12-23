@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="cordova.baidu.asr.plugin"
+    version="0.0.1">
+
+    <name>BaiduASRPlugin</name>
+    <description>
+       Cordova Baidu ASR Plugin
+    </description>
+    <license>MIT</license>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <js-module src="www/BaiduASR.js">
+       <clobbers target="cordova/plugins/BaiduASR" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="BaiduASR">
+                <param name="android-package" value="com.baidu.android.asr"/>
+            </feature>
+        </config-file>
+        
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+        	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.INTERNET" />
+			<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+			<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+			<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+			<uses-permission android:name="android.permission.WRITE_SETTINGS" />
+			<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+			<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+			<uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+        </config-file>
+        
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        	<meta-data android:name="com.baidu.speech.APP_ID" android:value="8114838"/>
+        	<meta-data android:name="com.baidu.speech.API_KEY" android:value="aDMbGya9mZU9CFHrP56S4MLf"/>
+        	<meta-data android:name="com.baidu.speech.SECRET_KEY" android:value="5cdeca5413ea8652098be1c8b6d1d522"/>
+        	<service android:name="com.baidu.speech.VoiceRecognitionService" android:exported="false" />
+    		
+    		<activity
+                android:name="com.baidu.voicerecognition.android.ui.BaiduASRDigitalDialog"
+                android:configChanges="orientation|keyboardHidden|screenLayout"
+                android:theme="@android:style/Theme.Dialog"
+                android:exported="false"
+                android:screenOrientation="portrait">
+	            <intent-filter>
+	                <action android:name="com.baidu.action.RECOGNIZE_SPEECH" />
+	                <category android:name="android.intent.category.DEFAULT" />
+	            </intent-filter>
+        	</activity>
+		</config-file>
+        
+        <source-file src="src/android/BaiduASR.java" target-dir="src/com/baidu/android/asr" />
+        <source-file src="src/android/R.java" target-dir="src/com/baidu/android/asr" />
+        <source-file src="src/android/Constant.java" target-dir="src/com/baidu/android/asr" />
+        <source-file src="src/android/Setting.java" target-dir="src/com/baidu/android/asr" />
+        <source-file src="src/android/libs/armeabi/" target-dir="libs/"/>
+        <source-file src="src/android/libs/VoiceRecognition-2.2.1027.jar" target-dir="libs/"/>
+        <source-file src="src/android/res/drawable/" target-dir="res/"/>
+        <source-file src="src/android/res/drawable-hdpi/" target-dir="res/"/>
+        <source-file src="src/android/res/drawable-xhdpi/" target-dir="res/"/>
+        <source-file src="src/android/res/layout/" target-dir="res/"/>
+        <source-file src="src/android/res/raw/" target-dir="res/"/>
+        <source-file src="src/android/res/values/" target-dir="res/"/>
+        <source-file src="src/android/res/xml/" target-dir="res/"/>
+    </platform>
+   
+</plugin>
