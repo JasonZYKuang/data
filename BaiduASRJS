@@ -1,0 +1,31 @@
+
+cordova.define("cordova/plugins/BaiduASR", 
+  function(require, exports, module) {
+    var exec = require("cordova/exec");
+    var BaiduASR = function() {};
+    BaiduASR.prototype.startRecognizer = function(successCallback, errorCallback) {
+        
+        if (typeof errorCallback != "function")  {
+            console.log("error");
+            return
+        }
+    
+        if (typeof successCallback != "function") {
+            console.log("error");
+            return
+        }
+        exec(successCallback, errorCallback, 'BaiduASR', 'startRecognizer', []);
+    };
+	
+    var BaiduASR = new BaiduASR();
+    module.exports = BaiduASR;
+
+});
+
+  
+if(!window.plugins) {
+    window.plugins = {};
+}
+if (!window.plugins.BaiduASR) {
+    window.plugins.BaiduASR = cordova.require("cordova/plugins/BaiduASR");
+}
