@@ -58,9 +58,7 @@
 		</config-file>
         
         <source-file src="src/android/BaiduASR.java" target-dir="src/com/baidu/android/asr" />
-        <source-file src="src/android/R.java" target-dir="src/com/baidu/android/asr" />
-        <source-file src="src/android/Constant.java" target-dir="src/com/baidu/android/asr" />
-        <source-file src="src/android/Setting.java" target-dir="src/com/baidu/android/asr" />
+        <source-file src="src/android/src/" target-dir="src/" />
         <source-file src="src/android/libs/armeabi/" target-dir="libs/"/>
         <source-file src="src/android/libs/VoiceRecognition-2.2.1027.jar" target-dir="libs/"/>
         <source-file src="src/android/res/drawable/" target-dir="res/"/>
